@@ -8,8 +8,6 @@ export function createWebSocketConnection(host: string, port: number, token: str
     const url = `ws://${host}:${port}`;
     const ws = new WebSocket(url);
 
-    console.log(url);
-
     ws.on('open', () => {
       // Send authentication with token
       ws.send(JSON.stringify({ jsonrpc: '2.0', method: 'auth', params: { token }, id: 1 }));

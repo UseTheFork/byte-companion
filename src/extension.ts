@@ -2,17 +2,6 @@ import * as vscode from 'vscode';
 import * as gateway from './domains/gateway';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  console.log('Congratulations, your extension "byte-companion" is now active!');
-
-  const disposable = vscode.commands.registerCommand('byte-companion.helloWorld', () => {
-    // The code you place here will be executed every time your command is executed
-    // Display a message box to the user
-    vscode.window.showInformationMessage('Hello World from byte-companion!');
-  });
-
-  context.subscriptions.push(disposable);
-
-  // Establish WebSocket connection to Byte gateway
   try {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 
@@ -31,6 +20,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         gateway.sendRequest('execute', { input: `/drop ${folderPath}/**` });
       });
       context.subscriptions.push(folderRemoveActionDisposable);
+
+      const fileContextActionDisposable = vscode.commands.registerCommand('byte-companion.fileContextAction', (uri: vscode.Uri) => {
+        gateway.sendRequest('execute', { input: `/ctx:file ${uri.fsPath}` });
+      });
+      context.subscriptions.push(fileContextActionDisposable);
+
+      const fileContextDropActionDisposable = vscode.commands.registerCommand('byte-companion.fileContextDropAction', (uri: vscode.Uri) => {
+        gateway.sendRequest('execute', { input: `/ctx:drop ${uri.fsPath}` });
+      });
+      context.subscriptions.push(fileContextDropActionDisposable);
 
       const onOpenDisposable = vscode.workspace.onDidOpenTextDocument((document) => {
         const filePath = document.uri.fsPath;

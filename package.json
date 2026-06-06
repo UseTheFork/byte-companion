@@ -22,6 +22,14 @@
       {
         "command": "byte-companion.folderRemoveAction",
         "title": "Remove Folder from Byte"
+      },
+      {
+        "command": "byte-companion.fileContextAction",
+        "title": "Add File to Byte Context"
+      },
+      {
+        "command": "byte-companion.fileContextDropAction",
+        "title": "Drop File from Byte Context"
       }
     ],
     "menus": {
@@ -34,6 +42,18 @@
         {
           "command": "byte-companion.folderRemoveAction",
           "when": "explorerResourceIsFolder",
+          "group": "7_modification"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "byte-companion.fileContextAction",
+          "when": "resourceScheme == file",
+          "group": "7_modification"
+        },
+        {
+          "command": "byte-companion.fileContextDropAction",
+          "when": "resourceScheme == file",
           "group": "7_modification"
         }
       ]
