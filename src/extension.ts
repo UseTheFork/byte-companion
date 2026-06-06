@@ -7,6 +7,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     if (workspaceFolder) {
       await gateway.connect(workspaceFolder.uri.fsPath);
+      vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
       console.log('Connected to Byte gateway');
 
       const folderActionDisposable = vscode.commands.registerCommand('byte-companion.folderAction', (uri: vscode.Uri) => {
@@ -35,7 +36,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const filePath = document.uri.fsPath;
         const rootPath = workspaceFolder.uri.fsPath;
 
-        if (!filePath.startsWith(rootPath)) {
+        console.log(filePath);
+        console.log(document.uri.scheme);
+
+        if (document.uri.scheme !== 'file' || !filePath.startsWith(rootPath)) {
           return;
         }
 
@@ -47,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const filePath = document.uri.fsPath;
         const rootPath = workspaceFolder.uri.fsPath;
 
-        if (!filePath.startsWith(rootPath)) {
+        if (document.uri.scheme !== 'file' || !filePath.startsWith(rootPath)) {
           return;
         }
 
@@ -61,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   }
 }
 
-// This method is called when your extension is deactivated
 export function deactivate(): void {
+  vscode.commands.executeCommand('setContext', 'byte-companion.connected', false);
   gateway.disconnect();
 }

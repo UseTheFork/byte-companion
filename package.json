@@ -36,24 +36,24 @@
       "explorer/context": [
         {
           "command": "byte-companion.folderAction",
-          "when": "explorerResourceIsFolder",
+          "when": "explorerResourceIsFolder && byte-companion.connected",
           "group": "7_modification"
         },
         {
           "command": "byte-companion.folderRemoveAction",
-          "when": "explorerResourceIsFolder",
+          "when": "explorerResourceIsFolder && byte-companion.connected",
           "group": "7_modification"
         }
       ],
       "editor/title/context": [
         {
           "command": "byte-companion.fileContextAction",
-          "when": "resourceScheme == file",
+          "when": "resourceScheme == file && byte-companion.connected",
           "group": "7_modification"
         },
         {
           "command": "byte-companion.fileContextDropAction",
-          "when": "resourceScheme == file",
+          "when": "resourceScheme == file && byte-companion.connected",
           "group": "7_modification"
         }
       ]
