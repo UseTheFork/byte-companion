@@ -10,8 +10,8 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1780704863,
-        "narHash": "sha256-E/K4Z0QVG1T91ZmTucXCSGyH6UBm049tRXag8iL/UKA=",
+        "lastModified": 1780750060,
+        "narHash": "sha256-gqkocg160G481c98/ivJI2NqWWQcUlJv2J0sFrRqVCg=",
         "path": "/home/sincore/source/byte",
         "type": "path"
       },
