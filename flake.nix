@@ -36,21 +36,18 @@
             {
               packages.byte-companion = pkgs.stdenv.mkDerivation {
                 pname = "byte-companion";
-                version = "0.0.1";
-                src = self;
-                nativeBuildInputs = [ pkgs.nodejs ];
-                buildPhase = ''
-                  export HOME=$TMPDIR
-                  npm ci
-                  npm run compile
-                '';
-                installPhase = ''
-                  mkdir -p $out/share/vscode/extensions/UseTheFork.byte-companion
-                  cp -r out package.json $out/share/vscode/extensions/UseTheFork.byte-companion/
-                  if [ -d node_modules ]; then
-                    cp -r node_modules $out/share/vscode/extensions/UseTheFork.byte-companion/
-                  fi
-                '';
+                version = "2026.6.7";
+                src = pkgs.fetchurl {
+                  url = "https://github.com/UseTheFork/byte-companion/releases/download/v2026.6.7/byte-companion-2026.6.7.vsix";
+                  sha256 = "sha256-f4vLSNGf0gASdiZQgfC4HlGZE5EEawIol+rUy6sSz0M=";
+                };
+
+                dontUnpack = true;
+
+                vscodeExtPublisher = "use-the-fork";
+                vscodeExtName = "byte-companion";
+                vscodeExtUniqueId = "use-the-fork.byte-companion";
+
               };
 
               packages.default = self'.packages.byte-companion;
