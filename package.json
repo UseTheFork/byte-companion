@@ -3,6 +3,10 @@
   "displayName": "byte-companion",
   "description": "",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UseTheFork/byte-companion/"
+  },
   "engines": {
     "vscode": "^1.116.0"
   },
