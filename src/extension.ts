@@ -36,9 +36,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const filePath = document.uri.fsPath;
         const rootPath = workspaceFolder.uri.fsPath;
 
-        console.log(filePath);
-        console.log(document.uri.scheme);
-
         if (document.uri.scheme !== 'file' || !filePath.startsWith(rootPath)) {
           return;
         }

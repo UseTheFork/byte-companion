@@ -27,8 +27,34 @@
         {
           systems = import inputs.systems;
           perSystem =
-            { pkgs, inputs', ... }:
             {
+              pkgs,
+              inputs',
+              self',
+              ...
+            }:
+            {
+              packages.byte-companion = pkgs.stdenv.mkDerivation {
+                pname = "byte-companion";
+                version = "0.0.1";
+                src = self;
+                nativeBuildInputs = [ pkgs.nodejs ];
+                buildPhase = ''
+                  export HOME=$TMPDIR
+                  npm ci
+                  npm run compile
+                '';
+                installPhase = ''
+                  mkdir -p $out/share/vscode/extensions/UseTheFork.byte-companion
+                  cp -r out package.json $out/share/vscode/extensions/UseTheFork.byte-companion/
+                  if [ -d node_modules ]; then
+                    cp -r node_modules $out/share/vscode/extensions/UseTheFork.byte-companion/
+                  fi
+                '';
+              };
+
+              packages.default = self'.packages.byte-companion;
+
               devShells.default = pkgs.mkShellNoCC {
                 name = "nix";
 
