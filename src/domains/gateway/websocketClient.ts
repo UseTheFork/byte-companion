@@ -2,10 +2,16 @@ import WebSocket from 'ws';
 
 let client: WebSocket | null = null;
 let nextId: number = 2;
+let statusCallback: ((status: 'connected' | 'connecting' | 'disconnected') => void) | null = null;
+
+export function setStatusCallback(callback: (status: 'connected' | 'connecting' | 'disconnected') => void): void {
+  statusCallback = callback;
+}
 
 export function createWebSocketConnection(host: string, port: number, token: string): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
     const url = `ws://${host}:${port}`;
+    statusCallback?.('connecting');
     const ws = new WebSocket(url);
 
     ws.on('open', () => {
@@ -17,6 +23,7 @@ export function createWebSocketConnection(host: string, port: number, token: str
       const message = JSON.parse(data.toString());
       if (message.result !== undefined && !message.error) {
         client = ws;
+        statusCallback?.('connected');
         resolve(ws);
       } else if (message.error) {
         ws.close();
@@ -25,11 +32,13 @@ export function createWebSocketConnection(host: string, port: number, token: str
     });
 
     ws.on('error', (error: Error) => {
+      statusCallback?.('disconnected');
       reject(error);
     });
 
     ws.on('close', () => {
       client = null;
+      statusCallback?.('disconnected');
     });
   });
 }

@@ -6,9 +6,53 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 
     if (workspaceFolder) {
-      await gateway.connect(workspaceFolder.uri.fsPath);
-      vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
-      console.log('Connected to Byte gateway');
+      // Create status bar item
+      const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+      statusBarItem.text = '(メ -_-).｡oO ( $(debug-disconnect) Disconnected )';
+      statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+      statusBarItem.tooltip = 'Byte: Disconnected — click to reconnect';
+      statusBarItem.command = 'byte-companion.reconnect';
+      statusBarItem.show();
+      context.subscriptions.push(statusBarItem);
+
+      // Set up status callback
+      gateway.setStatusCallback((status: 'connected' | 'connecting' | 'disconnected') => {
+        if (status === 'connected') {
+          statusBarItem.text = '(⁠   ^⁠‿⁠^⁠)';
+          statusBarItem.backgroundColor = undefined;
+          statusBarItem.tooltip = 'Byte: Connected';
+        } else if (status === 'disconnected') {
+          statusBarItem.text = '(メ -_-).｡oO ( $(debug-disconnect) Disconnected )';
+          statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+          statusBarItem.tooltip = 'Byte: Disconnected — click to reconnect';
+        } else if (status === 'connecting') {
+          statusBarItem.text = '(⁠   ^⁠‿⁠^⁠).｡oO ( $(sync~spin) Connecting...)';
+          statusBarItem.backgroundColor = undefined;
+          statusBarItem.tooltip = 'Byte: Connecting...';
+        }
+      });
+
+      // Register reconnect command
+      const reconnectDisposable = vscode.commands.registerCommand('byte-companion.reconnect', async () => {
+        try {
+          gateway.disconnect();
+          await gateway.connect(workspaceFolder.uri.fsPath);
+          vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
+          console.log('Reconnected to Byte gateway');
+        } catch (error) {
+          vscode.commands.executeCommand('setContext', 'byte-companion.connected', false);
+        }
+      });
+      context.subscriptions.push(reconnectDisposable);
+
+      try {
+        await gateway.connect(workspaceFolder.uri.fsPath);
+        vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
+        console.log('Connected to Byte gateway');
+      } catch (connectionError) {
+        statusBarItem.text = '$(debug-disconnect) Byte: Disconnected';
+        statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+      }
 
       const folderActionDisposable = vscode.commands.registerCommand('byte-companion.folderAction', (uri: vscode.Uri) => {
         const folderPath = uri.fsPath;

@@ -34,23 +34,6 @@
               ...
             }:
             {
-              packages.byte-companion = pkgs.stdenv.mkDerivation {
-                pname = "byte-companion";
-                version = "2026.6.7";
-                src = pkgs.fetchurl {
-                  url = "https://github.com/UseTheFork/byte-companion/releases/download/v2026.6.7/byte-companion-2026.6.7.vsix";
-                  sha256 = "sha256-f4vLSNGf0gASdiZQgfC4HlGZE5EEawIol+rUy6sSz0M=";
-                };
-
-                dontUnpack = true;
-
-                vscodeExtPublisher = "use-the-fork";
-                vscodeExtName = "byte-companion";
-                vscodeExtUniqueId = "use-the-fork.byte-companion";
-
-              };
-
-              packages.default = self'.packages.byte-companion;
 
               devShells.default = pkgs.mkShellNoCC {
                 name = "nix";

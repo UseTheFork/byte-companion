@@ -34,6 +34,10 @@
       {
         "command": "byte-companion.fileContextDropAction",
         "title": "Drop File from Byte Context"
+      },
+      {
+        "command": "byte-companion.reconnect",
+        "title": "Reconnect to Byte"
       }
     ],
     "menus": {
