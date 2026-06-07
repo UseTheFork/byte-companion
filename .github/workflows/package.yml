@@ -17,15 +17,6 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-
-      - name: Set date-based version
-        id: version
-        run: |
-          VERSION="$(date -u +'%Y.%-m.%-d').${{ github.run_number }}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          npm version "$VERSION" --no-git-tag-version
 
       - name: Install dependencies
         run: npm ci
