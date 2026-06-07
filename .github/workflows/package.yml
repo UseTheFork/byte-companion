@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,6 +19,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+
+      - name: Set date-based version
+        id: version
+        run: |
+          VERSION="$(date -u +'%Y.%-m.%-d').${{ github.run_number }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          npm version "$VERSION" --no-git-tag-version
 
       - name: Install dependencies
         run: npm ci
@@ -34,3 +41,9 @@ jobs:
         with:
           name: extension-vsix
           path: '*.vsix'
+
+      - name: Upload VSIX to GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '*.vsix'
