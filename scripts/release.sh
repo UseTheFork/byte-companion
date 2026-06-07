@@ -1,40 +1,51 @@
 #!/usr/bin/env bash
-
 set -e
 
-# Check if gh CLI is installed
+# Check that gh CLI is installed
 if ! command -v gh &> /dev/null; then
-  echo "Error: GitHub CLI (gh) is not installed. Please install it first."
-  echo "See: https://cli.github.com/"
+  echo "Error: 'gh' CLI is not installed. Please install GitHub CLI to continue."
   exit 1
 fi
 
-# Check if we're in a git repository
+# Check that we're in a git repository
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
-  echo "Error: Not in a git repository."
+  echo "Error: Current directory is not a git repository."
   exit 1
 fi
 
-# Generate date-based version string in format YYYY.M.D
-VERSION=$(date -u +'%Y.%-m.%-d')
+# Generate date-based version tag
+TAG="v$(date -u +'%Y.%-m.%-d')"
+echo "Preparing release with tag: $TAG"
 
-# Create git tag with v prefix
-TAG="v${VERSION}"
+# Delete existing GitHub release if it exists
+echo "Checking for existing GitHub release..."
+if gh release view "$TAG" > /dev/null 2>&1; then
+  echo "Deleting existing GitHub release for $TAG..."
+  gh release delete "$TAG" --yes
+fi
 
-echo "Creating release for version: $VERSION"
-echo "Tag: $TAG"
+# Delete existing remote tag if it exists
+echo "Checking for existing remote tag..."
+if git ls-remote origin "refs/tags/$TAG" | grep -q "$TAG"; then
+  echo "Deleting existing remote tag $TAG..."
+  git push origin --delete "$TAG"
+fi
 
-# Create and push the git tag
-echo "Creating git tag..."
+# Delete existing local tag if it exists
+echo "Checking for existing local tag..."
+if git rev-parse "$TAG" > /dev/null 2>&1; then
+  echo "Deleting existing local tag $TAG..."
+  git tag -d "$TAG"
+fi
+
+# Create git tag and push it
+echo "Creating and pushing git tag $TAG..."
 git tag "$TAG"
-
-echo "Pushing tag to remote..."
 git push origin "$TAG"
 
-# Create GitHub Release with auto-generated notes
-echo "Creating GitHub Release..."
-gh release create "$TAG" \
-  --title "Release $TAG" \
-  --generate-notes
+# Create GitHub release with auto-generated notes
+echo "Creating GitHub release with auto-generated notes..."
+gh release create "$TAG" --generate-notes
 
-echo "Release created successfully!"
+echo "Release $TAG created successfully!"
+
