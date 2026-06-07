@@ -13,9 +13,63 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
   exit 1
 fi
 
+# Interactive numbered menu to select release modifier
+while true; do
+  echo "Select release modifier:"
+  echo "  1) none (default)"
+  echo "  2) alpha"
+  echo "  3) beta"
+  echo "  4) rc"
+  echo "  5) dev"
+  read -p "Enter choice [1-5] (default: 1): " CHOICE
+  
+  # Default to 1 if empty
+  CHOICE="${CHOICE:-1}"
+  
+  case "$CHOICE" in
+    1)
+      MODIFIER=""
+      break
+      ;;
+    2)
+      MODIFIER="alpha"
+      break
+      ;;
+    3)
+      MODIFIER="beta"
+      break
+      ;;
+    4)
+      MODIFIER="rc"
+      break
+      ;;
+    5)
+      MODIFIER="dev"
+      break
+      ;;
+    *)
+      echo "Invalid choice. Please enter a number between 1 and 5."
+      ;;
+  esac
+done
+
 # Generate date-based version tag
 TAG="v$(date -u +'%Y.%-m.%-d')"
+
+# Append modifier if provided
+if [ -n "$MODIFIER" ]; then
+  TAG="${TAG}-${MODIFIER}"
+fi
+
 echo "Preparing release with tag: $TAG"
+
+# Extract version without leading 'v' and update package.json
+VERSION="${TAG#v}"
+echo "Updating package.json version to $VERSION..."
+npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+git add package.json package-lock.json 2>/dev/null || git add package.json
+git commit -m "chore: bump version to $VERSION"
 
 # Delete existing GitHub release if it exists
 echo "Checking for existing GitHub release..."

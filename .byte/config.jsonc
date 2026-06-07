@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/UseTheFork/byte/refs/heads/main/schema.json",
+  "$schema": "https://raw.githubusercontent.com/UseTheFork/byte/refs/heads/development/schema.json",
   "files": {
     "watch": {
       "enable": true
