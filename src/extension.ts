@@ -56,23 +56,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
       const folderActionDisposable = vscode.commands.registerCommand('byte-companion.folderAction', (uri: vscode.Uri) => {
         const folderPath = uri.fsPath;
-        gateway.sendRequest('execute', { input: `/add ${folderPath}/**` });
+        gateway.sendRequest('add_file', { file_path: `${folderPath}/**` });
       });
       context.subscriptions.push(folderActionDisposable);
 
       const folderRemoveActionDisposable = vscode.commands.registerCommand('byte-companion.folderRemoveAction', (uri: vscode.Uri) => {
         const folderPath = uri.fsPath;
-        gateway.sendRequest('execute', { input: `/drop ${folderPath}/**` });
+        gateway.sendRequest('drop_file', { file_path: `${folderPath}/**` });
       });
       context.subscriptions.push(folderRemoveActionDisposable);
 
       const fileContextActionDisposable = vscode.commands.registerCommand('byte-companion.fileContextAction', (uri: vscode.Uri) => {
-        gateway.sendRequest('execute', { input: `/ctx:file ${uri.fsPath}` });
+        gateway.sendRequest('context_add_file', { file_path: uri.fsPath });
       });
       context.subscriptions.push(fileContextActionDisposable);
 
       const fileContextDropActionDisposable = vscode.commands.registerCommand('byte-companion.fileContextDropAction', (uri: vscode.Uri) => {
-        gateway.sendRequest('execute', { input: `/ctx:drop ${uri.fsPath}` });
+        gateway.sendRequest('context_drop_file', { input: uri.fsPath });
       });
       context.subscriptions.push(fileContextDropActionDisposable);
 
@@ -84,7 +84,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           return;
         }
 
-        gateway.sendRequest('execute', { input: `/add ${filePath}` });
+        gateway.sendRequest('add_file', { file_path: filePath });
       });
       context.subscriptions.push(onOpenDisposable);
 
@@ -96,7 +96,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           return;
         }
 
-        gateway.sendRequest('execute', { input: `/remove ${filePath}` });
+        gateway.sendRequest('drop_file', { file_path: filePath });
       });
       context.subscriptions.push(onCloseDisposable);
     }

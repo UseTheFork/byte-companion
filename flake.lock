@@ -10,13 +10,13 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1780750060,
-        "narHash": "sha256-gqkocg160G481c98/ivJI2NqWWQcUlJv2J0sFrRqVCg=",
-        "path": "/home/sincore/source/byte",
+        "lastModified": 1780923172,
+        "narHash": "sha256-E0k8GBzt/n8+bE4oDZmIEg/RBwbbYLW/D9lsSZnUwl4=",
+        "path": "/home/nixos/source/byte",
         "type": "path"
       },
       "original": {
-        "path": "/home/sincore/source/byte",
+        "path": "/home/nixos/source/byte",
         "type": "path"
       }
     },

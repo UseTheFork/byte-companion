@@ -3,7 +3,8 @@
     systems.url = "github:nix-systems/default-linux";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    byte.url = "/home/sincore/source/byte";
+    # byte.url = "/home/sincore/source/byte";
+    byte.url = "/home/nixos/source/byte";
   };
 
   outputs =
