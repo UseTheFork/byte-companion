@@ -2,6 +2,10 @@ import * as vscode from 'vscode';
 import * as gateway from './domains/gateway';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  const outputChannel = vscode.window.createOutputChannel('Byte Companion');
+  context.subscriptions.push(outputChannel);
+  gateway.setLogCallback((msg) => outputChannel.appendLine(msg));
+
   try {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 
@@ -38,7 +42,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           gateway.disconnect();
           await gateway.connect(workspaceFolder.uri.fsPath);
           vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
-          console.log('Reconnected to Byte gateway');
+          outputChannel.appendLine('Reconnected to Byte gateway');
         } catch (error) {
           vscode.commands.executeCommand('setContext', 'byte-companion.connected', false);
         }
@@ -48,7 +52,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       try {
         await gateway.connect(workspaceFolder.uri.fsPath);
         vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
-        console.log('Connected to Byte gateway');
+        outputChannel.appendLine('Connected to Byte gateway');
       } catch (connectionError) {
         statusBarItem.text = '$(debug-disconnect) Byte: Disconnected';
         statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
@@ -102,7 +106,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Failed to connect to Byte gateway:', message);
+    outputChannel.appendLine(`Failed to connect to Byte gateway: ${message}`);
   }
 }
 

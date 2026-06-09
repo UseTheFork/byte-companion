@@ -2,7 +2,7 @@ import { readGatewayConfig } from './configReader';
 import { readToken } from './tokenReader';
 import { createWebSocketConnection, closeWebSocketConnection, setStatusCallback } from './websocketClient';
 
-export { sendRequest, setStatusCallback } from './websocketClient';
+export { sendRequest, setStatusCallback, setLogCallback } from './websocketClient';
 
 export async function connect(startPath: string): Promise<void> {
   const config = readGatewayConfig(startPath);
