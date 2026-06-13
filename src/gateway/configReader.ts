@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { GatewayConfig } from './types';
-import { findByteDir } from '../../utils/pathResolver';
+import { findByteDir } from '../utils/pathResolver';
 
 export function readGatewayConfig(startPath: string): GatewayConfig {
   const byteDir = findByteDir(startPath);
