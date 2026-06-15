@@ -6,25 +6,19 @@ export class State {
     readonly text: string,
     readonly tooltip: string,
     readonly command?: command.Companion,
-    readonly backgroundColor?: vscode.ThemeColor,
+    readonly backgroundColor?: vscode.ThemeColor
   ) {}
 
   static disconnected = new State(
     '(メ -_-).｡oO ( $(debug-disconnect) Disconnected )',
     'Byte: Disconnected — click to reconnect',
     command.Companion.reconnect,
-    new vscode.ThemeColor('statusBarItem.warningBackground'),
+    new vscode.ThemeColor('statusBarItem.warningBackground')
   );
 
-  static connecting = new State(
-    '(⁠   ^⁠‿⁠^⁠).｡oO ( $(sync~spin) Connecting...)',
-    'Byte: Connecting...',
-  );
+  static connecting = new State('(⁠   ^⁠‿⁠^⁠).｡oO ( $(sync~spin) Connecting...)', 'Byte: Connecting...');
 
-  static connected = new State(
-    '(⁠   ^⁠‿⁠^⁠)',
-    'Byte: Connected',
-  );
+  static connected = new State('(⁠   ^⁠‿⁠^⁠)', 'Byte: Connected');
 }
 
 export class Item implements vscode.Disposable {

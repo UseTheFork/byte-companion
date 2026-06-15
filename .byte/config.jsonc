@@ -4,12 +4,11 @@
     "watch": {
       "enable": true
     },
-    "ignore": [".byte/cache", ".ruff_cache", ".idea", ".venv", ".env", ".git", ".pytest_cache", "__pycache__", "node_modules", "dist"]
+    "ignore": [".byte", ".ruff_cache", ".idea", ".venv", ".env", ".git", ".pytest_cache", "__pycache__", "node_modules", "dist"]
   },
   "gateway": {
     "enable": true,
-    "host": "127.0.0.1",
-    "port": 9731
+    "host": "127.0.0.1"
   },
   "git": {
     "enable_scopes": false,
@@ -20,8 +19,13 @@
     "max_description_length": 72
   },
   "lint": {
-    "enable": false,
-    "commands": []
+    "enable": true,
+    "commands": [
+      {
+        "command": ["npm", "run", "lint", "--", "--fix", "{file}"],
+        "languages": ["javascript", "typescript"]
+      }
+    ]
   },
   "llm": {
     "fast": {
@@ -41,7 +45,6 @@
       "provider": "anthropic"
     }
   },
-  "presets": [],
   "tui": {
     "ui_theme": "mocha",
     "syntax_theme": "monokai"

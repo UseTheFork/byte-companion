@@ -4,15 +4,6 @@ let client: WebSocket | null = null;
 let nextId: number = 2;
 let statusCallback: ((status: 'connected' | 'connecting' | 'disconnected') => void) | null = null;
 
-// Reconnect state variables
-let connectionHost: string = '';
-let connectionPort: number = 0;
-let connectionToken: string = '';
-let intentionalClose: boolean = false;
-let reconnectAttempts: number = 0;
-const MAX_RECONNECT_ATTEMPTS: number = 5;
-const BASE_RECONNECT_DELAY_MS: number = 1000;
-let reconnectTimer: NodeJS.Timeout | null = null;
 let logCallback: ((msg: string) => void) | null = null;
 
 export function setStatusCallback(callback: (status: 'connected' | 'connecting' | 'disconnected') => void): void {
@@ -30,13 +21,6 @@ function logError(msg: string): void {
 
 export function createWebSocketConnection(host: string, port: number, token: string): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
-    // Save connection parameters for reconnect
-    connectionHost = host;
-    connectionPort = port;
-    connectionToken = token;
-    reconnectAttempts = 0;
-    intentionalClose = false;
-
     const url = `ws://${host}:${port}`;
     statusCallback?.('connecting');
     const ws = new WebSocket(url);
@@ -57,7 +41,6 @@ export function createWebSocketConnection(host: string, port: number, token: str
 
       const parsedMessage = message as { result?: unknown; error?: { message: string } };
       if (parsedMessage.result !== undefined && !parsedMessage.error) {
-        reconnectAttempts = 0;
         client = ws;
         statusCallback?.('connected');
         resolve(ws);
@@ -73,17 +56,8 @@ export function createWebSocketConnection(host: string, port: number, token: str
     });
 
     ws.on('close', () => {
-      if (!intentionalClose && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-        const delay = BASE_RECONNECT_DELAY_MS * (2 ** reconnectAttempts);
-        reconnectAttempts++;
-        statusCallback?.('connecting');
-        reconnectTimer = setTimeout(() => {
-          createWebSocketConnection(connectionHost, connectionPort, connectionToken).catch(() => {});
-        }, delay);
-      } else {
-        client = null;
-        statusCallback?.('disconnected');
-      }
+      client = null;
+      statusCallback?.('disconnected');
     });
   });
 }
@@ -93,11 +67,6 @@ export function getWebSocketClient(): WebSocket | null {
 }
 
 export function closeWebSocketConnection(): void {
-  intentionalClose = true;
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
   if (client) {
     client.close();
     client = null;
