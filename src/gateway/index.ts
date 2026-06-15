@@ -17,6 +17,10 @@ export class Gateway {
     this.wsClient.setLogCallback(callback);
   }
 
+  setNotificationCallback(callback: (notification: { method: string; params: unknown }) => void): void {
+    this.wsClient.setNotificationCallback(callback);
+  }
+
   async connect(): Promise<void> {
     const config = readGatewayConfig(this.startPath);
     const token = readToken(config.token_file);

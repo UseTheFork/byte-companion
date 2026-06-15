@@ -19,6 +19,10 @@ export class State {
   static connecting = new State('(⁠   ^⁠‿⁠^⁠).｡oO ( $(sync~spin) Connecting...)', 'Byte: Connecting...');
 
   static connected = new State('(⁠   ^⁠‿⁠^⁠)', 'Byte: Connected');
+
+  static connectedWithCount(fileCount: number, contextCount: number): State {
+    return new State(`(⁠   ^⁠‿⁠^⁠) | ${fileCount} files | ${contextCount} context`, 'Byte: Connected');
+  }
 }
 
 export class Item implements vscode.Disposable {

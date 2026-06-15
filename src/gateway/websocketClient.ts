@@ -5,6 +5,7 @@ export class WebSocketClient {
   private nextId: number = 2;
   private statusCallback: ((status: 'connected' | 'connecting' | 'disconnected') => void) | null = null;
   private logCallback: ((msg: string) => void) | null = null;
+  private notificationCallback: ((notification: { method: string; params: unknown }) => void) | null = null;
 
   setStatusCallback(callback: (status: 'connected' | 'connecting' | 'disconnected') => void): void {
     this.statusCallback = callback;
@@ -12,6 +13,10 @@ export class WebSocketClient {
 
   setLogCallback(callback: (msg: string) => void): void {
     this.logCallback = callback;
+  }
+
+  setNotificationCallback(callback: (notification: { method: string; params: unknown }) => void): void {
+    this.notificationCallback = callback;
   }
 
   private logError(msg: string): void {
@@ -39,7 +44,13 @@ export class WebSocketClient {
           return;
         }
 
-        const parsedMessage = message as { id?: number; result?: unknown; error?: { message: string } };
+        const parsedMessage = message as { id?: number; method?: string; params?: unknown; result?: unknown; error?: { message: string } };
+
+        // Handle JSON-RPC notifications (method field but no id field)
+        if (parsedMessage.method && !parsedMessage.id) {
+          this.notificationCallback?.({ method: parsedMessage.method, params: parsedMessage.params });
+          return;
+        }
 
         // Only handle the auth response (id: 1) for connection state
         if (parsedMessage.id === 1) {

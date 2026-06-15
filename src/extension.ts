@@ -10,6 +10,8 @@ class Companion implements vscode.Disposable {
   private didConnect = new vscode.EventEmitter<void>();
   private didDisconnect = new vscode.EventEmitter<void>();
   private connectionFailed = new vscode.EventEmitter<Error>();
+  private fileCount: number = 0;
+  private contextCount: number = 0;
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -40,6 +42,23 @@ class Companion implements vscode.Disposable {
     this.gateway = new Gateway(this.workspaceFolder.uri.fsPath);
     this.gateway.setLogCallback((msg) => this.output.appendLine(msg));
     this.setupStatusCallback();
+    this.gateway.setNotificationCallback((notification) => {
+      this.output.appendLine(JSON.stringify(notification));
+
+      if (notification.method === 'messages/update_files') {
+        const params = notification.params as { count?: number };
+        if (params.count !== undefined) {
+          this.fileCount = params.count;
+          this.statusItem.update(status.State.connectedWithCount(this.fileCount, this.contextCount));
+        }
+      } else if (notification.method === 'messages/update_context') {
+        const params = notification.params as { context_count?: number };
+        if (params.context_count !== undefined) {
+          this.contextCount = params.context_count;
+          this.statusItem.update(status.State.connectedWithCount(this.fileCount, this.contextCount));
+        }
+      }
+    });
 
     this.statusItem.update(status.State.disconnected);
   }
@@ -73,6 +92,20 @@ class Companion implements vscode.Disposable {
     vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
     this.statusItem.update(status.State.connected);
     this.output.appendLine('Connected to Byte gateway');
+
+    if (this.workspaceFolder && this.gateway) {
+      for (const tabGroup of vscode.window.tabGroups.all) {
+        for (const tab of tabGroup.tabs) {
+          if (tab.input instanceof vscode.TabInputText) {
+            const uri = tab.input.uri;
+            if (uri.scheme === 'file' && uri.fsPath.startsWith(this.workspaceFolder.uri.fsPath)) {
+              this.output.appendLine(`added: ${uri.fsPath}`);
+              this.gateway.sendRequest('add_file', { file_path: uri.fsPath });
+            }
+          }
+        }
+      }
+    }
   }
 
   private onDidDisconnect(): void {
@@ -199,14 +232,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.workspace.onDidCloseTextDocument((document) => {
       companion.onDidCloseTextDocument(document);
-    }),
-    vscode.window.tabGroups.onDidChangeTabs(async (e) => {
-      for (const tab of e.opened) {
-        if (tab.input instanceof vscode.TabInputText) {
-          const document = await vscode.workspace.openTextDocument(tab.input.uri);
-          companion.onDidOpenTextDocument(document);
-        }
-      }
     })
   );
 }
