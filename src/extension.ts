@@ -43,7 +43,7 @@ class Companion implements vscode.Disposable {
     this.gateway.setLogCallback((msg) => this.output.appendLine(msg));
     this.setupStatusCallback();
     this.gateway.setNotificationCallback((notification) => {
-      this.output.appendLine(JSON.stringify(notification));
+      //   this.output.appendLine(JSON.stringify(notification));
 
       if (notification.method === 'messages/update_files') {
         const params = notification.params as { count?: number };
@@ -90,7 +90,7 @@ class Companion implements vscode.Disposable {
 
   private onDidConnect(): void {
     vscode.commands.executeCommand('setContext', 'byte-companion.connected', true);
-    this.statusItem.update(status.State.connected);
+    this.statusItem.update(status.State.connectedWithCount(this.fileCount, this.contextCount));
     this.output.appendLine('Connected to Byte gateway');
 
     if (this.workspaceFolder && this.gateway) {
@@ -125,6 +125,7 @@ class Companion implements vscode.Disposable {
 
     this.gateway.setStatusCallback((gatewayStatus: 'connected' | 'connecting' | 'disconnected') => {
       if (gatewayStatus === 'connected') {
+        this.statusItem.update(status.State.connectedWithCount(this.fileCount, this.contextCount));
         this.didConnect.fire();
       } else if (gatewayStatus === 'disconnected') {
         this.didDisconnect.fire();
@@ -152,6 +153,24 @@ class Companion implements vscode.Disposable {
     const folderPath = uri.fsPath;
     this.output.appendLine(`removed: ${folderPath}/**`);
     this.gateway.sendRequest('drop_file', { file_path: `${folderPath}/**` });
+  }
+
+  onFileAction(uri: vscode.Uri): void {
+    if (!this.gateway) {
+      return;
+    }
+
+    this.output.appendLine(`added: ${uri.fsPath}`);
+    this.gateway.sendRequest('add_file', { file_path: uri.fsPath });
+  }
+
+  onFileRemoveAction(uri: vscode.Uri): void {
+    if (!this.gateway) {
+      return;
+    }
+
+    this.output.appendLine(`removed: ${uri.fsPath}`);
+    this.gateway.sendRequest('drop_file', { file_path: uri.fsPath });
   }
 
   onFileContextAction(uri: vscode.Uri): void {
@@ -220,6 +239,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.commands.registerCommand(command.Companion.folderRemoveAction, (uri: vscode.Uri) => {
       companion.onFolderRemoveAction(uri);
+    }),
+    vscode.commands.registerCommand(command.Companion.fileAction, (uri: vscode.Uri) => {
+      companion.onFileAction(uri);
+    }),
+    vscode.commands.registerCommand(command.Companion.fileRemoveAction, (uri: vscode.Uri) => {
+      companion.onFileRemoveAction(uri);
     }),
     vscode.commands.registerCommand(command.Companion.fileContextAction, (uri: vscode.Uri) => {
       companion.onFileContextAction(uri);

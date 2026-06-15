@@ -36,6 +36,14 @@
         "title": "Drop File from Byte Context"
       },
       {
+        "command": "byte-companion.fileAction",
+        "title": "Add File to Byte"
+      },
+      {
+        "command": "byte-companion.fileRemoveAction",
+        "title": "Remove File from Byte"
+      },
+      {
         "command": "byte-companion.reconnect",
         "title": "Reconnect to Byte"
       }
@@ -50,6 +58,16 @@
         {
           "command": "byte-companion.folderRemoveAction",
           "when": "explorerResourceIsFolder && byte-companion.connected",
+          "group": "7_modification"
+        },
+        {
+          "command": "byte-companion.fileAction",
+          "when": "!explorerResourceIsFolder && byte-companion.connected",
+          "group": "7_modification"
+        },
+        {
+          "command": "byte-companion.fileRemoveAction",
+          "when": "!explorerResourceIsFolder && byte-companion.connected",
           "group": "7_modification"
         }
       ],

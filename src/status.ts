@@ -10,7 +10,7 @@ export class State {
   ) {}
 
   static disconnected = new State(
-    '(メ -_-)',
+    '(メ -_-) | 0 files | 0 context',
     'Byte: Disconnected — click to reconnect',
     command.Companion.reconnect,
     new vscode.ThemeColor('statusBarItem.warningBackground')
