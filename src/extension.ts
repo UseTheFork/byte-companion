@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import * as command from './command';
-import * as gateway from './gateway';
+import { Gateway } from './gateway';
 import * as status from './status';
 
 class Companion implements vscode.Disposable {
   private output = vscode.window.createOutputChannel('Byte Companion');
   private workspaceFolder: vscode.WorkspaceFolder | undefined;
+  private gateway: Gateway | null = null;
   private didConnect = new vscode.EventEmitter<void>();
   private didDisconnect = new vscode.EventEmitter<void>();
   private connectionFailed = new vscode.EventEmitter<Error>();
@@ -26,7 +27,9 @@ class Companion implements vscode.Disposable {
     this.didConnect.dispose();
     this.didDisconnect.dispose();
     this.connectionFailed.dispose();
-    gateway.disconnect();
+    if (this.gateway) {
+      this.gateway.disconnect();
+    }
   }
 
   async initialize(): Promise<void> {
@@ -34,19 +37,20 @@ class Companion implements vscode.Disposable {
       return;
     }
 
-    gateway.setLogCallback((msg) => this.output.appendLine(msg));
+    this.gateway = new Gateway(this.workspaceFolder.uri.fsPath);
+    this.gateway.setLogCallback((msg) => this.output.appendLine(msg));
     this.setupStatusCallback();
 
     this.statusItem.update(status.State.disconnected);
   }
 
   async connect(): Promise<void> {
-    if (!this.workspaceFolder) {
+    if (!this.gateway) {
       return;
     }
 
     try {
-      await gateway.connect(this.workspaceFolder.uri.fsPath);
+      await this.gateway.connect();
       this.didConnect.fire();
     } catch (error) {
       this.connectionFailed.fire(error instanceof Error ? error : new Error(String(error)));
@@ -59,8 +63,10 @@ class Companion implements vscode.Disposable {
   }
 
   disconnect(): void {
-    gateway.disconnect();
-    this.didDisconnect.fire();
+    if (this.gateway) {
+      this.gateway.disconnect();
+      this.didDisconnect.fire();
+    }
   }
 
   private onDidConnect(): void {
@@ -80,7 +86,11 @@ class Companion implements vscode.Disposable {
   }
 
   private setupStatusCallback(): void {
-    gateway.setStatusCallback((gatewayStatus: 'connected' | 'connecting' | 'disconnected') => {
+    if (!this.gateway) {
+      return;
+    }
+
+    this.gateway.setStatusCallback((gatewayStatus: 'connected' | 'connecting' | 'disconnected') => {
       if (gatewayStatus === 'connected') {
         this.didConnect.fire();
       } else if (gatewayStatus === 'disconnected') {
@@ -92,29 +102,45 @@ class Companion implements vscode.Disposable {
   }
 
   onFolderAction(uri: vscode.Uri): void {
+    if (!this.gateway) {
+      return;
+    }
+
     const folderPath = uri.fsPath;
     this.output.appendLine(`added: ${folderPath}/**`);
-    gateway.sendRequest('add_file', { file_path: `${folderPath}/**` });
+    this.gateway.sendRequest('add_file', { file_path: `${folderPath}/**` });
   }
 
   onFolderRemoveAction(uri: vscode.Uri): void {
+    if (!this.gateway) {
+      return;
+    }
+
     const folderPath = uri.fsPath;
     this.output.appendLine(`removed: ${folderPath}/**`);
-    gateway.sendRequest('drop_file', { file_path: `${folderPath}/**` });
+    this.gateway.sendRequest('drop_file', { file_path: `${folderPath}/**` });
   }
 
   onFileContextAction(uri: vscode.Uri): void {
+    if (!this.gateway) {
+      return;
+    }
+
     this.output.appendLine(`context added: ${uri.fsPath}`);
-    gateway.sendRequest('context_add_file', { file_path: uri.fsPath });
+    this.gateway.sendRequest('context_add_file', { file_path: uri.fsPath });
   }
 
   onFileContextDropAction(uri: vscode.Uri): void {
+    if (!this.gateway) {
+      return;
+    }
+
     this.output.appendLine(`context dropped: ${uri.fsPath}`);
-    gateway.sendRequest('context_drop_file', { input: uri.fsPath });
+    this.gateway.sendRequest('context_drop_file', { input: uri.fsPath });
   }
 
   onDidOpenTextDocument(document: vscode.TextDocument): void {
-    if (!this.workspaceFolder) {
+    if (!this.workspaceFolder || !this.gateway) {
       return;
     }
 
@@ -126,11 +152,11 @@ class Companion implements vscode.Disposable {
     }
 
     this.output.appendLine(`added: ${filePath}`);
-    gateway.sendRequest('add_file', { file_path: filePath });
+    this.gateway.sendRequest('add_file', { file_path: filePath });
   }
 
   onDidCloseTextDocument(document: vscode.TextDocument): void {
-    if (!this.workspaceFolder) {
+    if (!this.workspaceFolder || !this.gateway) {
       return;
     }
 
@@ -142,7 +168,7 @@ class Companion implements vscode.Disposable {
     }
 
     this.output.appendLine(`removed: ${filePath}`);
-    gateway.sendRequest('drop_file', { file_path: filePath });
+    this.gateway.sendRequest('drop_file', { file_path: filePath });
   }
 }
 

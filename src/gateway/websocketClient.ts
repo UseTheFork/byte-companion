@@ -1,90 +1,91 @@
 import WebSocket from 'ws';
 
-let client: WebSocket | null = null;
-let nextId: number = 2;
-let statusCallback: ((status: 'connected' | 'connecting' | 'disconnected') => void) | null = null;
+export class WebSocketClient {
+  private client: WebSocket | null = null;
+  private nextId: number = 2;
+  private statusCallback: ((status: 'connected' | 'connecting' | 'disconnected') => void) | null = null;
+  private logCallback: ((msg: string) => void) | null = null;
 
-let logCallback: ((msg: string) => void) | null = null;
-
-export function setStatusCallback(callback: (status: 'connected' | 'connecting' | 'disconnected') => void): void {
-  statusCallback = callback;
-}
-
-export function setLogCallback(callback: (msg: string) => void): void {
-  logCallback = callback;
-}
-
-function logError(msg: string): void {
-  logCallback?.(msg);
-  console.error(msg);
-}
-
-export function createWebSocketConnection(host: string, port: number, token: string): Promise<WebSocket> {
-  return new Promise((resolve, reject) => {
-    const url = `ws://${host}:${port}`;
-    statusCallback?.('connecting');
-    const ws = new WebSocket(url);
-
-    ws.on('open', () => {
-      // Send authentication with token
-      ws.send(JSON.stringify({ jsonrpc: '2.0', method: 'auth', params: { token }, id: 1 }));
-    });
-
-    ws.on('message', (data: WebSocket.Data) => {
-      let message: unknown;
-      try {
-        message = JSON.parse(data.toString());
-      } catch (error) {
-        logError(`Failed to parse WebSocket message: ${error}`);
-        return;
-      }
-
-      const parsedMessage = message as { result?: unknown; error?: { message: string } };
-      if (parsedMessage.result !== undefined && !parsedMessage.error) {
-        client = ws;
-        statusCallback?.('connected');
-        resolve(ws);
-      } else if (parsedMessage.error) {
-        ws.close();
-        reject(new Error(parsedMessage.error.message));
-      }
-    });
-
-    ws.on('error', (error: Error) => {
-      statusCallback?.('disconnected');
-      reject(error);
-    });
-
-    ws.on('close', () => {
-      client = null;
-      statusCallback?.('disconnected');
-    });
-  });
-}
-
-export function getWebSocketClient(): WebSocket | null {
-  return client;
-}
-
-export function closeWebSocketConnection(): void {
-  if (client) {
-    client.close();
-    client = null;
-  }
-}
-
-export function sendRequest(method: string, params: Record<string, unknown>): void {
-  if (!client) {
-    logError('WebSocket client is not connected');
-    return;
+  setStatusCallback(callback: (status: 'connected' | 'connecting' | 'disconnected') => void): void {
+    this.statusCallback = callback;
   }
 
-  const request = {
-    jsonrpc: '2.0',
-    method,
-    params,
-    id: nextId++,
-  };
+  setLogCallback(callback: (msg: string) => void): void {
+    this.logCallback = callback;
+  }
 
-  client.send(JSON.stringify(request));
+  private logError(msg: string): void {
+    this.logCallback?.(msg);
+    console.error(msg);
+  }
+
+  async connect(host: string, port: number, token: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const url = `ws://${host}:${port}`;
+      this.statusCallback?.('connecting');
+      const ws = new WebSocket(url);
+
+      ws.on('open', () => {
+        // Send authentication with token
+        ws.send(JSON.stringify({ jsonrpc: '2.0', method: 'auth', params: { token }, id: 1 }));
+      });
+
+      ws.on('message', (data: WebSocket.Data) => {
+        let message: unknown;
+        try {
+          message = JSON.parse(data.toString());
+        } catch (error) {
+          this.logError(`Failed to parse WebSocket message: ${error}`);
+          return;
+        }
+
+        const parsedMessage = message as { id?: number; result?: unknown; error?: { message: string } };
+
+        // Only handle the auth response (id: 1) for connection state
+        if (parsedMessage.id === 1) {
+          if (parsedMessage.result !== undefined && !parsedMessage.error) {
+            this.client = ws;
+            this.statusCallback?.('connected');
+            resolve();
+          } else if (parsedMessage.error) {
+            ws.close();
+            reject(new Error(parsedMessage.error.message));
+          }
+        }
+      });
+
+      ws.on('error', (error: Error) => {
+        this.statusCallback?.('disconnected');
+        reject(error);
+      });
+
+      ws.on('close', () => {
+        this.client = null;
+        this.statusCallback?.('disconnected');
+      });
+    });
+  }
+
+  disconnect(): void {
+    if (this.client) {
+      this.client.close();
+      this.client = null;
+    }
+  }
+
+  sendRequest(method: string, params: Record<string, unknown>): void {
+    if (!this.client) {
+      this.logError('WebSocket client is not connected');
+      return;
+    }
+
+    const request = {
+      jsonrpc: '2.0',
+      method,
+      params,
+      id: this.nextId++,
+    };
+
+    this.client.send(JSON.stringify(request));
+  }
 }
